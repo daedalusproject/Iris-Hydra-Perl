@@ -6,6 +6,7 @@ use lib '../lib';
 use Daedalus::Hermes;
 use Coro;
 use Coro::AnyEvent;
+use Sys::Syslog;
 
 use Carp;
 
@@ -35,15 +36,13 @@ $SIG{PIPE} = 'IGNORE';
 my @pids;
 
 while (1){
-for (1..10) {
-   push @pids, async {
+    for (1..10) {
+    push @pids, async {
     my $received_message =
       $hermes->validateAndReceive( { queue => "daedalus_core_notifications" } )->{body};
-    print "$received_message";
-   };
+          syslog("info", $received_message);
+          };
+          }
+          $_->join for @pids;
+          undef(@pids)
 }
-$_->join for @pids;
-undef(@pids)
-}
-
-
