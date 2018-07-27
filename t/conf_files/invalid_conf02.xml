@@ -1,0 +1,6 @@
+<hydra>
+    <event>
+        <name>NewRegisterdUser</name>
+        <notification>e-mail</notification>
+    </event>
+</hydra>
