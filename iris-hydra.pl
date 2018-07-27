@@ -10,30 +10,30 @@ use Readonly;
 use Data::Dumper;
 
 Readonly my $SCHEMAS_FOLDER => "./schemas/";
-Readonly my $HYDRA_SCHEMA => "hydra.xsd";
+Readonly my $HYDRA_SCHEMA   => "hydra.xsd";
 
-sub valitate_conf_file{
+sub valitate_conf_file {
 
-    my $schema_file = shift;
-my $xml_doc_file = shift;
+    my $schema_file  = shift;
+    my $xml_doc_file = shift;
 
-my $status = {
- code => 1,
- message => "",
-};
+    my $status = {
+        code    => 1,
+        message => "",
+    };
 
-my $xml_doc = XML::LibXML->load_xml(location => $xml_doc_file);
-my $xsd_doc = XML::LibXML::Schema->new(location => $schema_file);
+    my $xml_doc = XML::LibXML->load_xml( location => $xml_doc_file );
+    my $xsd_doc = XML::LibXML::Schema->new( location => $schema_file );
 
-try {
-    $xsd_doc->validate($xml_doc);
-}
-catch {
-    $status->{message} = $_;
-    $status->{code} = 0;
-};
+    try {
+        $xsd_doc->validate($xml_doc);
+    }
+    catch {
+        $status->{message} = $_;
+        $status->{code}    = 0;
+    };
 
-return $status;
+    return $status;
 }
 
 ## Main
@@ -60,6 +60,6 @@ open( my $fh, '<:encoding(UTF-8)', $conf_filename )
 
 close($fh);
 
-$is_valid = valitate_conf_file($schema, $conf_filename);
+$is_valid = valitate_conf_file( $schema, $conf_filename );
 
-die $is_valid->{message} unless($is_valid->{code});
+die $is_valid->{message} unless ( $is_valid->{code} );
