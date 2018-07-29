@@ -2,5 +2,9 @@
     <event>
         <name>NewRegisterdUser</name>
         <notification>e-mail</notification>
+        <hermes>
+            <type>rabbitmq</type>
+            <name>daedalus_core_notifications</name>
+        </hermes>
     </event>
 </hydra>
