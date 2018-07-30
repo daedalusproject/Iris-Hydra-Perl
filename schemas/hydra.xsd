@@ -6,7 +6,7 @@
     <xs:element name="hydra">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name = "event">
+                <xs:element name = "event" minOccurs="1" maxOccurs="unbounded">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name = "name" type = "xs:string"/>

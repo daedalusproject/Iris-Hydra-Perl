@@ -1,0 +1,18 @@
+<hydra>
+    <event>
+        <name>NewRegisteredUser</name>
+        <notification>e-mail</notification>
+        <hermes>
+            <type>rabbitmq</type>
+            <name>daedalus_core_notifications</name>
+        </hermes>
+    </event>
+    <event>
+        <name>Other</name>
+        <notification>e-mail</notification>
+        <hermes>
+            <type>rabbitmq</type>
+            <name>daedalus_something</name>
+        </hermes>
+    </event>
+</hydra>
