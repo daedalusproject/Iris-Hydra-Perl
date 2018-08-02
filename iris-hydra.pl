@@ -8,6 +8,7 @@ use Try::Tiny qw(try catch);
 use Readonly;
 use XML::Parser;
 use XML::SimpleObject;
+use Daedalus::Hermes;
 
 use Carp qw(croak);
 
@@ -89,6 +90,10 @@ sub read_conf_files {
 
     my $hydra_conf_folder = shift;
 
+    my $event_configs = {};
+
+    my @hermes_config_names;
+
     my $hydra_conf_file = "$hydra_conf_folder/$HYDRA_CONF_FILE";
 
     my $parser = XML::Parser->new( ErrorContext => 2, Style => 'Tree' );
@@ -105,10 +110,29 @@ sub read_conf_files {
     my $hydra = $hydra_config->child("hydra");
 
     for my $hydra_event ( @{ $hydra->{event} } ) {
-        print "events\n";
+
+        my $notification_name = $hydra_event->child('name')->value;
+        my $notification_type = $hydra_event->child('notification')->value;
+        my $hermes_name = $hydra_event->child('hermes')->child('name')->value;
+
+        if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
+            croak
+"\nHermes config must be different for each event, $hermes_name is being used in more than one event.\n";
+        }
+        else {
+            push @hermes_config_names, $hermes_name;
+        }
+
+        $event_configs->{$notification_name} =
+          { notification_type => $notification_type, };
+
+# For each hermes_config there must exist an xml config file iwit the same name inside conf.d
+        $event_configs->{$notification_name}->{hermes_config} =
+          Daedalus::Hermes::parse_hermes_config(
+            "$hydra_conf_folder/conf.d/$hermes_name.xml");
     }
 
-    die Dumper($hydra);
+    return $event_configs;
 
 }
 
@@ -146,3 +170,5 @@ croak $is_valid->{message} unless ( $is_valid->{code} );
 # iris-hydra.xml is valid
 
 $event_configs = read_conf_files($conf_folder);
+
+die Dumper($event_configs);

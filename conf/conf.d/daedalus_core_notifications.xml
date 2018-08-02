@@ -1,5 +1,5 @@
 <hermes>
-    <type>rabbitmq</type>
+    <type>RabbitMQ</type>
     <user>guest</user>
     <port>5672</port>
     <host>localhost</host>
