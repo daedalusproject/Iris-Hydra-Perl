@@ -26,6 +26,10 @@ Version 0.01
 
 our $VERSION = '0.01';
 
+=head1 AUTHOR
+
+Álvaro Castellano Vela, C<< <alvaro.castellano.vela at gmail.com> >>
+
 =head1 SYNOPSIS
 
 Daemon which processes notifications coming form Daedalus::Hermes queues and processed using Daedalus::Iris
@@ -172,3 +176,14 @@ croak $is_valid->{message} unless ( $is_valid->{code} );
 $event_configs = read_conf_files($conf_folder);
 
 die Dumper($event_configs);
+
+=head1 ACKNOWLEDGEMENTS
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2018 Álvaro Castellano Vela.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU GENERAL PUBLIC LICENSE Version 3.
+
+=cut
