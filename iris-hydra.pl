@@ -6,11 +6,54 @@ use strict;
 use XML::LibXML;
 use Try::Tiny qw(try catch);
 use Readonly;
+use XML::Parser;
+use XML::SimpleObject;
+use Daedalus::Hermes;
+
+use Carp qw(croak);
 
 use Data::Dumper;
 
-Readonly my $SCHEMAS_FOLDER => "./schemas/";
-Readonly my $HYDRA_SCHEMA   => "hydra.xsd";
+=head1 NAME
+
+Iris Hydra - Daedalus Project Notification Daemon.
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+
+our $VERSION = '0.01';
+
+=head1 SYNOPSIS
+
+Daemon which processes notifications coming form Daedalus::Hermes queues and processed using Daedalus::Iris
+
+=cut
+
+=head1 CONFIGURATION FILES
+
+This daemon needs an argument containing a path with conf folder.
+
+Conf folder must follow this structure:
+
+.
+├── conf.d
+│   └── EVENT_NAME.xml
+└── iris-hydra.xml
+
+=cut
+
+Readonly my $SCHEMAS_FOLDER  => "./schemas/";
+Readonly my $HYDRA_SCHEMA    => "hydra.xsd";
+Readonly my $HYDRA_CONF_FILE => "iris-hydra.xml";
+
+=head2 valitate_conf_file
+
+Validate conf/iris_hydra.xml using xsd schema
+
+=cut
 
 sub valitate_conf_file {
 
@@ -36,6 +79,63 @@ sub valitate_conf_file {
     return $status;
 }
 
+=head2 read_conf_files
+
+After validating iris-hydra.xml file, read all conf files required
+by conf file. These files must be placed in conf.d folder.
+
+=cut
+
+sub read_conf_files {
+
+    my $hydra_conf_folder = shift;
+
+    my $event_configs = {};
+
+    my @hermes_config_names;
+
+    my $hydra_conf_file = "$hydra_conf_folder/$HYDRA_CONF_FILE";
+
+    my $parser = XML::Parser->new( ErrorContext => 2, Style => 'Tree' );
+
+    eval { $parser->parsefile($hydra_conf_file); };
+
+    if ($@) {
+        croak "\nERROR processing '$hydra_conf_file':\n$@\n";
+    }
+
+    my $hydra_config =
+      XML::SimpleObject->new( $parser->parsefile($hydra_conf_file) );
+
+    my $hydra = $hydra_config->child("hydra");
+
+    for my $hydra_event ( @{ $hydra->{event} } ) {
+
+        my $notification_name = $hydra_event->child('name')->value;
+        my $notification_type = $hydra_event->child('notification')->value;
+        my $hermes_name = $hydra_event->child('hermes')->child('name')->value;
+
+        if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
+            croak
+"\nHermes config must be different for each event, $hermes_name is being used in more than one event.\n";
+        }
+        else {
+            push @hermes_config_names, $hermes_name;
+        }
+
+        $event_configs->{$notification_name} =
+          { notification_type => $notification_type, };
+
+# For each hermes_config there must exist an xml config file iwit the same name inside conf.d
+        $event_configs->{$notification_name}->{hermes_config} =
+          Daedalus::Hermes::parse_hermes_config(
+            "$hydra_conf_folder/conf.d/$hermes_name.xml");
+    }
+
+    return $event_configs;
+
+}
+
 ## Main
 
 my $argssize;
@@ -46,6 +146,8 @@ my @args;
 my $schema = "$SCHEMAS_FOLDER$HYDRA_SCHEMA";
 my $is_valid;
 
+my $event_configs;
+
 $argssize = scalar @ARGV;
 
 if ( $argssize != 1 ) {
@@ -53,7 +155,8 @@ if ( $argssize != 1 ) {
     exit 1;
 }
 
-my $conf_filename = $ARGV[0];
+my $conf_folder   = $ARGV[0];
+my $conf_filename = "$conf_folder/$HYDRA_CONF_FILE";
 
 open( my $fh, '<:encoding(UTF-8)', $conf_filename )
   or die "Could not open file '$conf_filename' $!";
@@ -62,4 +165,10 @@ close($fh);
 
 $is_valid = valitate_conf_file( $schema, $conf_filename );
 
-die $is_valid->{message} unless ( $is_valid->{code} );
+croak $is_valid->{message} unless ( $is_valid->{code} );
+
+# iris-hydra.xml is valid
+
+$event_configs = read_conf_files($conf_folder);
+
+die Dumper($event_configs);
