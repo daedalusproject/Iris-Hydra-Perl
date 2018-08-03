@@ -47,6 +47,11 @@ Conf folder must follow this structure:
 │   └── EVENT_NAME.xml
 └── iris-hydra.xml
 
+Schemas folder must follow this structure so far:
+
+.
+└── hydra.xsd
+
 =cut
 
 Readonly my $SCHEMAS_FOLDER  => "./schemas/";
@@ -147,20 +152,22 @@ my @args;
 
 # Config files
 
-my $schema = "$SCHEMAS_FOLDER$HYDRA_SCHEMA";
 my $is_valid;
 
 my $event_configs;
 
 $argssize = scalar @ARGV;
 
-if ( $argssize != 1 ) {
-    print STDERR "This script only accepts one arg.\n";
+if ( $argssize != 2 ) {
+    print STDERR
+"This script only accepts two args, conf folder location and schemas folder location.\n";
     exit 1;
 }
 
-my $conf_folder   = $ARGV[0];
-my $conf_filename = "$conf_folder/$HYDRA_CONF_FILE";
+my $conf_folder    = $ARGV[0];
+my $schemas_folder = $ARGV[1];
+my $conf_filename  = "$conf_folder/$HYDRA_CONF_FILE";
+my $schema         = "$schemas_folder/$HYDRA_SCHEMA";
 
 open( my $fh, '<:encoding(UTF-8)', $conf_filename )
   or die "Could not open file '$conf_filename' $!";
