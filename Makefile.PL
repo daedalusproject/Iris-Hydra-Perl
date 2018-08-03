@@ -10,7 +10,6 @@ WriteMakefile(
     AUTHOR  => q{Álvaro Castellano Vela <alvaro.castellano.vela@gmail.com>},
     LICENSE => 'gpl_3',
     MIN_PERL_VERSION   => 5.006,
-    EXE_FILES          => ['script/iris-hydra'],
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,
     },
