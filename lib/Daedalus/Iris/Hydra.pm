@@ -1,8 +1,8 @@
 package Daedalus::Iris::Hydra;
 
-use warnings;
+use 5.006;
 use strict;
-
+use warnings;
 use XML::LibXML;
 use Try::Tiny qw(try catch);
 use Readonly;
@@ -15,7 +15,7 @@ use Data::Dumper;
 
 =head1 NAME
 
-Iris Hydra - Daedalus Project Notification Daemon.
+Daedalus::Iris::Hydra - Daedalus Project Notification Daemon.
 
 =head1 VERSION
 
@@ -25,17 +25,13 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-=head1 AUTHOR
-
-Álvaro Castellano Vela, C<< <alvaro.castellano.vela at gmail.com> >>
-
 =head1 SYNOPSIS
 
 Daemon which processes notifications coming form Daedalus::Hermes queues and processed using Daedalus::Iris
 
 =cut
 
-=head1 CONFIGURATION FILES
+=head2 CONFIGURATION FILES
 
 This daemon needs an argument containing a path with conf folder.
 
@@ -53,44 +49,43 @@ Schemas folder must follow this structure so far:
 
 =cut
 
-Readonly my $SCHEMAS_FOLDER  => "./schemas/";
-Readonly my $HYDRA_SCHEMA    => "hydra.xsd";
-Readonly my $HYDRA_CONF_FILE => "iris-hydra.xml";
-
 =head2 valitate_conf_file
 
 Validate conf/iris_hydra.xml using xsd schema
 
 =cut
 
+Readonly my $SCHEMAS_FOLDER  => "./schemas/";
+Readonly my $HYDRA_SCHEMA    => "hydra.xsd";
+Readonly my $HYDRA_CONF_FILE => "iris-hydra.xml";
 
-__PACKAGE__->run( @ARGV ) unless caller();
+__PACKAGE__->run(@ARGV) unless caller();
 
 sub run {
 
-sub valitate_conf_file {
+    sub valitate_conf_file {
 
-    my $schema_file  = shift;
-    my $xml_doc_file = shift;
+        my $schema_file  = shift;
+        my $xml_doc_file = shift;
 
-    my $status = {
-        code    => 1,
-        message => "",
-    };
+        my $status = {
+            code    => 1,
+            message => "",
+        };
 
-    my $xml_doc = XML::LibXML->load_xml( location => $xml_doc_file );
-    my $xsd_doc = XML::LibXML::Schema->new( location => $schema_file );
+        my $xml_doc = XML::LibXML->load_xml( location => $xml_doc_file );
+        my $xsd_doc = XML::LibXML::Schema->new( location => $schema_file );
 
-    try {
-        $xsd_doc->validate($xml_doc);
+        try {
+            $xsd_doc->validate($xml_doc);
+        }
+        catch {
+            $status->{message} = $_;
+            $status->{code}    = 0;
+        };
+
+        return $status;
     }
-    catch {
-        $status->{message} = $_;
-        $status->{code}    = 0;
-    };
-
-    return $status;
-}
 
 =head2 read_conf_files
 
@@ -99,101 +94,147 @@ by conf file. These files must be placed in conf.d folder.
 
 =cut
 
-sub read_conf_files {
+    sub read_conf_files {
 
-    my $hydra_conf_folder = shift;
+        my $hydra_conf_folder = shift;
 
-    my $event_configs = {};
+        my $event_configs = {};
 
-    my @hermes_config_names;
+        my @hermes_config_names;
 
-    my $hydra_conf_file = "$hydra_conf_folder/$HYDRA_CONF_FILE";
+        my $hydra_conf_file = "$hydra_conf_folder/$HYDRA_CONF_FILE";
 
-    my $parser = XML::Parser->new( ErrorContext => 2, Style => 'Tree' );
+        my $parser = XML::Parser->new( ErrorContext => 2, Style => 'Tree' );
 
-    eval { $parser->parsefile($hydra_conf_file); };
+        eval { $parser->parsefile($hydra_conf_file); };
 
-    if ($@) {
-        croak "\nERROR processing '$hydra_conf_file':\n$@\n";
-    }
+        if ($@) {
+            croak "\nERROR processing '$hydra_conf_file':\n$@\n";
+        }
 
-    my $hydra_config =
-      XML::SimpleObject->new( $parser->parsefile($hydra_conf_file) );
+        my $hydra_config =
+          XML::SimpleObject->new( $parser->parsefile($hydra_conf_file) );
 
-    my $hydra = $hydra_config->child("hydra");
+        my $hydra = $hydra_config->child("hydra");
 
-    for my $hydra_event ( @{ $hydra->{event} } ) {
+        for my $hydra_event ( @{ $hydra->{event} } ) {
 
-        my $notification_name = $hydra_event->child('name')->value;
-        my $notification_type = $hydra_event->child('notification')->value;
-        my $hermes_name = $hydra_event->child('hermes')->child('name')->value;
+            my $notification_name = $hydra_event->child('name')->value;
+            my $notification_type = $hydra_event->child('notification')->value;
+            my $hermes_name =
+              $hydra_event->child('hermes')->child('name')->value;
 
-        if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
-            croak
+            if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
+                croak
 "\nHermes config must be different for each event, $hermes_name is being used in more than one event.\n";
-        }
-        else {
-            push @hermes_config_names, $hermes_name;
-        }
+            }
+            else {
+                push @hermes_config_names, $hermes_name;
+            }
 
-        $event_configs->{$notification_name} =
-          { notification_type => $notification_type, };
+            $event_configs->{$notification_name} =
+              { notification_type => $notification_type, };
 
 # For each hermes_config there must exist an xml config file iwit the same name inside conf.d
-        $event_configs->{$notification_name}->{hermes_config} =
-          Daedalus::Hermes::parse_hermes_config(
-            "$hydra_conf_folder/conf.d/$hermes_name.xml");
+            $event_configs->{$notification_name}->{hermes_config} =
+              Daedalus::Hermes::parse_hermes_config(
+                "$hydra_conf_folder/conf.d/$hermes_name.xml");
+        }
+
+        return $event_configs;
+
     }
-
-    return $event_configs;
-
-}
 
 ## Main
 
-my $argssize;
-my @args;
+    my $argssize;
+    my @args;
 
-# Config files
+    # Config files
 
-my $is_valid;
+    my $is_valid;
 
-my $event_configs;
+    my $event_configs;
 
-$argssize = scalar @ARGV;
+    $argssize = scalar @ARGV;
 
-if ( $argssize != 2 ) {
-    print STDERR
+    if ( $argssize != 2 ) {
+        print STDERR
 "This script only accepts two args, conf folder location and schemas folder location.\n";
-    exit 1;
+        exit 1;
+    }
+
+    my $conf_folder    = $ARGV[0];
+    my $schemas_folder = $ARGV[1];
+    my $conf_filename  = "$conf_folder/$HYDRA_CONF_FILE";
+    my $schema         = "$schemas_folder/$HYDRA_SCHEMA";
+
+    open( my $fh, '<:encoding(UTF-8)', $conf_filename )
+      or die "Could not open file '$conf_filename' $!";
+
+    close($fh);
+
+    $is_valid = valitate_conf_file( $schema, $conf_filename );
+
+    croak $is_valid->{message} unless ( $is_valid->{code} );
+
+    # iris-hydra.xml is valid
+
+    $event_configs = read_conf_files($conf_folder);
+
+    die Dumper($event_configs);
+
 }
 
-my $conf_folder    = $ARGV[0];
-my $schemas_folder = $ARGV[1];
-my $conf_filename  = "$conf_folder/$HYDRA_CONF_FILE";
-my $schema         = "$schemas_folder/$HYDRA_SCHEMA";
+=head1 AUTHOR
 
-open( my $fh, '<:encoding(UTF-8)', $conf_filename )
-  or die "Could not open file '$conf_filename' $!";
+Álvaro Castellano Vela, C<< <alvaro.castellano.vela at gmail.com> >>
 
-close($fh);
+=head1 BUGS
 
-$is_valid = valitate_conf_file( $schema, $conf_filename );
+Please report any bugs or feature requests to C<bug-daedalus-iris-hydra at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Daedalus-Iris-Hydra>.  I will be notified, and then you'll
+automatically be notified of progress on your bug as I make changes.
 
-croak $is_valid->{message} unless ( $is_valid->{code} );
+=head1 SUPPORT
 
-# iris-hydra.xml is valid
+You can find documentation for this module with the perldoc command.
 
-$event_configs = read_conf_files($conf_folder);
+    perldoc Daedalus::Iris::Hydra
 
-die Dumper($event_configs);
 
-}
+You can also look for information at:
 
-=head1 LICENSE
+=over 4
 
-GNU GENERAL PUBLIC LICENSE Version 3
+=item * RT: CPAN's request tracker (report bugs here)
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Daedalus-Iris-Hydra>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Daedalus-Iris-Hydra>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/Daedalus-Iris-Hydra>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/Daedalus-Iris-Hydra/>
+
+=back
+
+
+=head1 ACKNOWLEDGEMENTS
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2018 Álvaro Castellano Vela.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU GENERAL PUBLIC LICENSE Version 3.
 
 =cut
 
-1;
+1;    # End of Daedalus::Iris::Hydra
