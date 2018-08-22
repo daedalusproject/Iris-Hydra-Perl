@@ -31,6 +31,7 @@ cover:
         - apt-get update
         - apt-get install -y rabbitmq-server libdaedalus-iris-perl libdaedalus-hermes-perl
         - service rabbitmq-server start
+        - cpanm --quiet --installdeps --notest .
     script:
         - perl --version
         - perl Makefile.PL
