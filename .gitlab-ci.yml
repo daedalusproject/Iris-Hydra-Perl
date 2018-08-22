@@ -35,7 +35,6 @@ cover:
         - perl --version
         - perl Makefile.PL
         - make
-        - mutator mutate lib/Daedalus/Hermes.pm
         - cover -test
         - cover -report codecov
     coverage: /Total\s+.+\s(\d+\.\d+?)$/
