@@ -158,16 +158,26 @@ by conf file. These files must be placed in conf.d folder.
 
     $argssize = scalar @ARGV;
 
-    if ( $argssize != 2 ) {
-        print STDERR
-"This script only accepts two args, conf folder location and schemas folder location.\n";
-        exit 1;
-    }
+    my $conf_folder    = "";
+    my $schemas_folder = "";
 
-    my $conf_folder    = $ARGV[0];
-    my $schemas_folder = $ARGV[1];
-    my $conf_filename  = "$conf_folder/$HYDRA_CONF_FILE";
-    my $schema         = "$schemas_folder/$HYDRA_SCHEMA";
+    if ( $argssize != 2 ) {
+        if ( @_ != 2 ) {
+            print STDERR
+"This script only accepts two args, conf folder location and schemas folder location.\n";
+            exit 1;
+        }
+        else {
+            $conf_folder    = shift;
+            $schemas_folder = shift;
+        }
+    }
+    else {
+        $conf_folder    = $ARGV[0];
+        $schemas_folder = $ARGV[1];
+    }
+    my $conf_filename = "$conf_folder/$HYDRA_CONF_FILE";
+    my $schema        = "$schemas_folder/$HYDRA_SCHEMA";
 
     open( my $fh, '<:encoding(UTF-8)', $conf_filename )
       or die "Could not open file '$conf_filename' $!";
@@ -182,7 +192,7 @@ by conf file. These files must be placed in conf.d folder.
 
     $event_configs = read_conf_files($conf_folder);
 
-    die Dumper($event_configs);
+    #die Dumper($event_configs);
 
 }
 
