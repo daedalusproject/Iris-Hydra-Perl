@@ -192,6 +192,9 @@ by conf file. These files must be placed in conf.d folder.
 
     $event_configs = read_conf_files($conf_folder);
 
+    #Create subprocess for each event
+
+    #for my $event in
     #die Dumper($event_configs);
 
 }
