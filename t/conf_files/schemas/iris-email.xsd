@@ -10,6 +10,7 @@
                 <xs:element name = "smtpport" type = "xs:int"/>
                 <xs:element name = "smtpuser" type = "xs:string"/>
                 <xs:element name = "smtpassword" type = "xs:string"/>
+                <xs:element name = "emailfrom" type = "xs:string"/>
             </xs:all>
         </xs:complexType>
     </xs:element>
