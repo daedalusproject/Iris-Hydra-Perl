@@ -196,9 +196,16 @@ by conf file. These files must be placed in conf.d folder.
 
     $event_configs = read_conf_files($conf_folder);
 
-    #Check Iris Config
+    # Check Iris Config
     for my $event_name ( keys %$event_configs ) {
-        try;
+        my $iris_notification_type =
+          $event_configs->{$event_name}->{notification_type};
+        my $iris_conf_filename =
+          "$conf_folder/iris-$iris_notification_type.xml";
+        my $iris_conf_schema =
+          "$schemas_folder/iris-$iris_notification_type.xsd";
+        die Dumper(
+            valitate_conf_file( $iris_conf_schema, $iris_conf_filename ) );
     }
 
     #Create subprocess for each event

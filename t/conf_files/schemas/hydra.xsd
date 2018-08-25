@@ -13,7 +13,7 @@
                             <xs:element name = "notification"  minOccurs="1" maxOccurs="unbounded" >
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="e-mail"/>
+                                        <xs:enumeration value="email"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
