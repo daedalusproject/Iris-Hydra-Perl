@@ -1,7 +1,7 @@
 <hydra>
     <event>
         <name>NewRegisteredUser</name>
-        <notification>e-mail</notification>
+        <notification>email</notification>
         <hermes>
             <name>daedalus_core_notifications</name>
         </hermes>

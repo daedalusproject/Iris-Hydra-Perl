@@ -145,6 +145,10 @@ by conf file. These files must be placed in conf.d folder.
 
     }
 
+    sub start_hermes {
+        my $config = shift;
+        die Dumper($config);
+    }
 ## Main
 
     my $argssize;
@@ -192,11 +196,20 @@ by conf file. These files must be placed in conf.d folder.
 
     $event_configs = read_conf_files($conf_folder);
 
+    #Check Iris Config
+    for my $event_name ( keys %$event_configs ) {
+        try;
+    }
+
     #Create subprocess for each event
-
-    #for my $event in
-    #die Dumper($event_configs);
-
+    my $pid;
+    for my $event_name ( keys %$event_configs ) {
+        $pid = fork();
+        croak "Fatal error creating subprocess" if not defined $pid;
+        if ( not $pid ) {
+            start_hermes( $event_configs->{$event_name} );
+        }
+    }
 }
 
 =head1 AUTHOR
