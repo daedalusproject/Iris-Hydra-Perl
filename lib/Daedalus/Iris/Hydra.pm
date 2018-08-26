@@ -9,6 +9,9 @@ use Readonly;
 use XML::Parser;
 use XML::SimpleObject;
 use Daedalus::Hermes;
+use Daedalus::Iris;
+use JSON::XS;
+use String::Random;
 
 use Carp;
 use Data::Dumper;
@@ -146,10 +149,10 @@ by conf file. These files must be placed in conf.d folder.
     }
 
     sub start_hermes {
-        my $hermes_config = shift;
-        my $conf_folder   = shift;
+        my $event_config = shift;
+        my $conf_folder  = shift;
 
-        my $iris_notification_type = $hermes_config->{notification_type};
+        my $iris_notification_type = $event_config->{notification_type};
 
         my $iris_conf_file = "$conf_folder/iris-$iris_notification_type.xml";
 
@@ -173,16 +176,42 @@ by conf file. These files must be placed in conf.d folder.
         }
 
         my $HERMES =
-          Daedalus::Hermes->new( lc $hermes_config->{hermes_config}->{type} );
+          Daedalus::Hermes->new( lc $event_config->{hermes_config}->{type} );
 
-        my $hermes = $HERMES->new( $hermes_config->{hermes_config}->{config} );
+        my $hermes = $HERMES->new( $event_config->{hermes_config}->{config} );
 
-        my $received_message;
+        my $message;
+        my $message_data;
 
         while (1) {
-            $received_message = $hermes->validateAndReceive(
+
+            my %data_to_send;
+
+            for my $data ( keys %iris ) {
+                $data_to_send{$data} = $iris{$data};
+            }
+
+            $message = $hermes->validateAndReceive(
                 { queue => "daedalus_core_notifications" } )->{body};
-            carp "$received_message";
+
+            my $message_data = decode_json($message);
+
+            my $IRIS =
+              Daedalus::Iris->new( $event_config->{notification_type} );
+
+            for my $data ( keys %$message_data ) {
+                $data_to_send{$data} = $message_data->{$data};
+            }
+
+            my $random_string = new String::Random;
+            my $random        = $random_string->randpattern( 's' x 32 );
+
+            $data_to_send{id} = $random;
+
+            my $iris_instance = $IRIS->new(%data_to_send);
+
+            die Dumper( $iris_instance->send() );
+
         }
     }
 ## Main
