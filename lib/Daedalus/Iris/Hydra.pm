@@ -87,14 +87,14 @@ sub run {
         return $status;
     }
 
-=head2 read_conf_files
+=head2 read_hydra_conf_files
 
 After validating iris-hydra.xml file, read all conf files required
 by conf file. These files must be placed in conf.d folder.
 
 =cut
 
-    sub read_conf_files {
+    sub read_hydra_conf_files {
 
         my $hydra_conf_folder = shift;
 
@@ -146,8 +146,32 @@ by conf file. These files must be placed in conf.d folder.
     }
 
     sub start_hermes {
-        my $config = shift;
-        die Dumper($config);
+        my $hermes_config = shift;
+        my $conf_folder   = shift;
+
+        my $iris_notification_type = $hermes_config->{notification_type};
+
+        my $iris_conf_file = "$conf_folder/iris-$iris_notification_type.xml";
+
+        my $parser = XML::Parser->new( ErrorContext => 2, Style => 'Tree' );
+
+        eval { $parser->parsefile($iris_conf_file); };
+
+        if ($@) {
+            croak "\nERROR processing '$iris_conf_file':\n$@\n";
+        }
+
+        my $iris_config =
+          XML::SimpleObject->new( $parser->parsefile($iris_conf_file) );
+
+        my $iris = $iris_config->child("iris");
+
+        my %iris;
+
+        for my $child ( $iris->children ) {
+            $iris{ $child->name } = $child->value;
+        }
+        die Dumper( \%iris );
     }
 ## Main
 
@@ -194,7 +218,7 @@ by conf file. These files must be placed in conf.d folder.
 
     # iris-hydra.xml is valid
 
-    $event_configs = read_conf_files($conf_folder);
+    $event_configs = read_hydra_conf_files($conf_folder);
 
     # Check Iris Config
     for my $event_name ( keys %$event_configs ) {
@@ -204,8 +228,10 @@ by conf file. These files must be placed in conf.d folder.
           "$conf_folder/iris-$iris_notification_type.xml";
         my $iris_conf_schema =
           "$schemas_folder/iris-$iris_notification_type.xsd";
-        die Dumper(
-            valitate_conf_file( $iris_conf_schema, $iris_conf_filename ) );
+        my $check_status =
+          valitate_conf_file( $iris_conf_schema, $iris_conf_filename );
+        croak "Iris config for $event_name is invalid"
+          unless ( $check_status->{code} );
     }
 
     #Create subprocess for each event
@@ -214,7 +240,7 @@ by conf file. These files must be placed in conf.d folder.
         $pid = fork();
         croak "Fatal error creating subprocess" if not defined $pid;
         if ( not $pid ) {
-            start_hermes( $event_configs->{$event_name} );
+            start_hermes( $event_configs->{$event_name}, $conf_folder );
         }
     }
 }
