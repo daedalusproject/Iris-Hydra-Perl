@@ -135,10 +135,12 @@ by conf file. These files must be placed in conf.d folder.
             $event_configs->{$notification_name} =
               { notification_type => $notification_type, };
 
-# For each hermes_config there must exist an xml config file iwit the same name inside conf.d
+# For each hermes_config there must exist an xml config file with the same name inside conf.d
             $event_configs->{$notification_name}->{hermes_config} =
               Daedalus::Hermes::parse_hermes_config(
                 "$hydra_conf_folder/conf.d/$hermes_name.xml");
+
+            die Dumper($event_configs);
         }
 
         return $event_configs;
@@ -171,7 +173,11 @@ by conf file. These files must be placed in conf.d folder.
         for my $child ( $iris->children ) {
             $iris{ $child->name } = $child->value;
         }
-        die Dumper( \%iris );
+
+        my $HERMES =
+          Daedalus::Hermes->new( lc $hermes_config->{hermes_config}->{type} );
+        die Dumper($hermes_config);
+
     }
 ## Main
 
