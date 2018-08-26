@@ -10,7 +10,7 @@ use XML::Parser;
 use XML::SimpleObject;
 use Daedalus::Hermes;
 
-use Carp qw(croak);
+use Carp;
 use Data::Dumper;
 
 =head1 NAME
@@ -140,11 +140,9 @@ by conf file. These files must be placed in conf.d folder.
               Daedalus::Hermes::parse_hermes_config(
                 "$hydra_conf_folder/conf.d/$hermes_name.xml");
 
-            die Dumper($event_configs);
+            return $event_configs;
+
         }
-
-        return $event_configs;
-
     }
 
     sub start_hermes {
@@ -176,8 +174,16 @@ by conf file. These files must be placed in conf.d folder.
 
         my $HERMES =
           Daedalus::Hermes->new( lc $hermes_config->{hermes_config}->{type} );
-        die Dumper($hermes_config);
 
+        my $hermes = $HERMES->new( $hermes_config->{hermes_config}->{config} );
+
+        my $received_message;
+
+        while (1) {
+            $received_message = $hermes->validateAndReceive(
+                { queue => "daedalus_core_notifications" } )->{body};
+            carp "$received_message";
+        }
     }
 ## Main
 
@@ -249,6 +255,8 @@ by conf file. These files must be placed in conf.d folder.
             start_hermes( $event_configs->{$event_name}, $conf_folder );
         }
     }
+
+    while ( wait() != -1 ) { }
 }
 
 =head1 AUTHOR
