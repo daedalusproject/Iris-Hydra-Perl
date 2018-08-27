@@ -12,7 +12,7 @@ unit_tests:
         - wget -O- https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc | apt-key add -
         - wget -O - http://repo.daedalus-project.io/repo.daedalus-project.io.gpg-key.pub | apt-key add -
         - apt-get update
-        - apt-get install -y rabbitmq-server libdaedalus-iris-perl libdaedalus-hermes-perl
+        - apt-get install -y rabbitmq-server libdaedalus-iris-perl libdaedalus-hermes-perl libjson-xs-perl
         - service rabbitmq-server start
     script:
         - perl --version
@@ -29,7 +29,7 @@ cover:
         - wget -O- https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc | apt-key add -
         - wget -O - http://repo.daedalus-project.io/repo.daedalus-project.io.gpg-key.pub | apt-key add -
         - apt-get update
-        - apt-get install -y rabbitmq-server libdaedalus-iris-perl libdaedalus-hermes-perl
+        - apt-get install -y rabbitmq-server libdaedalus-iris-perl libdaedalus-hermes-perl libjson-xs-perl
         - service rabbitmq-server start
         - cpanm --quiet --installdeps --notest .
     script:
