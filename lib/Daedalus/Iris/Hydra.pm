@@ -105,6 +105,8 @@ by conf file. These files must be placed in conf.d folder.
 
         my @hermes_config_names;
 
+        my @event_names;
+
         my $hydra_conf_file = "$hydra_conf_folder/$HYDRA_CONF_FILE";
 
         my $parser = XML::Parser->new( ErrorContext => 2, Style => 'Tree' );
@@ -126,13 +128,21 @@ by conf file. These files must be placed in conf.d folder.
             my $notification_type = $hydra_event->child('notification')->value;
             my $hermes_name =
               $hydra_event->child('hermes')->child('name')->value;
-
-            if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
+            if ( grep ( /^$notification_name$/, @event_names ) ) {
                 croak
-"\nHermes config must be different for each event, $hermes_name is being used in more than one event.\n";
+"\nEach event must have different name, $notification_name is duplicated.\n";
             }
             else {
-                push @hermes_config_names, $hermes_name;
+
+                push @event_names, $notification_name;
+
+                if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
+                    croak
+"\nHermes config must be different for each event, $hermes_name is being used in more than one event.\n";
+                }
+                else {
+                    push @hermes_config_names, $hermes_name;
+                }
             }
 
             $event_configs->{$notification_name} =
@@ -142,10 +152,9 @@ by conf file. These files must be placed in conf.d folder.
             $event_configs->{$notification_name}->{hermes_config} =
               Daedalus::Hermes::parse_hermes_config(
                 "$hydra_conf_folder/conf.d/$hermes_name.xml");
-
-            return $event_configs;
-
         }
+
+        return $event_configs;
     }
 
     sub start_hermes {
