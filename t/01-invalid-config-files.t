@@ -11,7 +11,7 @@ throws_ok {
     Daedalus::Iris::Hydra::run( 't/conf_files/conf-duplicated-events',
         't/conf_files/schemas' );
 }
-qr/Hermes config must be different for each event, daedalus_core_notifications is being used in more than one event/,
+qr/Each event must have different name, NewRegisteredUser is duplicated/,
   "It is not allowed to define more than one event with the same name.";
 
 throws_ok {
@@ -19,7 +19,7 @@ throws_ok {
         't/conf_files/schemas' );
 }
 qr/Hermes config must be different for each event, daedalus_core_notifications is being used in more than one event/,
-  "It is not allowed to define more than one event with the same name.";
+  "It is not allowed to use the same hermes config in more than one event.";
 
 diag(
 "Testing Daedalus::Iris::Hydra $Daedalus::Iris::Hydra::VERSION, Perl $], $^X"

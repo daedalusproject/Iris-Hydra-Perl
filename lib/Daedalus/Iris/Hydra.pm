@@ -9,8 +9,11 @@ use Readonly;
 use XML::Parser;
 use XML::SimpleObject;
 use Daedalus::Hermes;
+use Daedalus::Iris;
+use JSON::XS;
+use String::Random;
 
-use Carp qw(croak);
+use Carp;
 use Data::Dumper;
 
 =head1 NAME
@@ -87,20 +90,22 @@ sub run {
         return $status;
     }
 
-=head2 read_conf_files
+=head2 read_hydra_conf_files
 
 After validating iris-hydra.xml file, read all conf files required
 by conf file. These files must be placed in conf.d folder.
 
 =cut
 
-    sub read_conf_files {
+    sub read_hydra_conf_files {
 
         my $hydra_conf_folder = shift;
 
         my $event_configs = {};
 
         my @hermes_config_names;
+
+        my @event_names;
 
         my $hydra_conf_file = "$hydra_conf_folder/$HYDRA_CONF_FILE";
 
@@ -123,28 +128,101 @@ by conf file. These files must be placed in conf.d folder.
             my $notification_type = $hydra_event->child('notification')->value;
             my $hermes_name =
               $hydra_event->child('hermes')->child('name')->value;
-
-            if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
+            if ( grep ( /^$notification_name$/, @event_names ) ) {
                 croak
-"\nHermes config must be different for each event, $hermes_name is being used in more than one event.\n";
+"\nEach event must have different name, $notification_name is duplicated.\n";
             }
             else {
-                push @hermes_config_names, $hermes_name;
+
+                push @event_names, $notification_name;
+
+                if ( grep ( /^$hermes_name$/, @hermes_config_names ) ) {
+                    croak
+"\nHermes config must be different for each event, $hermes_name is being used in more than one event.\n";
+                }
+                else {
+                    push @hermes_config_names, $hermes_name;
+                }
             }
 
             $event_configs->{$notification_name} =
               { notification_type => $notification_type, };
 
-# For each hermes_config there must exist an xml config file iwit the same name inside conf.d
+# For each hermes_config there must exist an xml config file with the same name inside conf.d
             $event_configs->{$notification_name}->{hermes_config} =
               Daedalus::Hermes::parse_hermes_config(
                 "$hydra_conf_folder/conf.d/$hermes_name.xml");
         }
 
         return $event_configs;
-
     }
 
+    sub start_hermes {
+        my $event_config = shift;
+        my $conf_folder  = shift;
+
+        my $iris_notification_type = $event_config->{notification_type};
+
+        my $iris_conf_file = "$conf_folder/iris-$iris_notification_type.xml";
+
+        my $parser = XML::Parser->new( ErrorContext => 2, Style => 'Tree' );
+
+        eval { $parser->parsefile($iris_conf_file); };
+
+        if ($@) {
+            croak "\nERROR processing '$iris_conf_file':\n$@\n";
+        }
+
+        my $iris_config =
+          XML::SimpleObject->new( $parser->parsefile($iris_conf_file) );
+
+        my $iris = $iris_config->child("iris");
+
+        my %iris;
+
+        for my $child ( $iris->children ) {
+            $iris{ $child->name } = $child->value;
+        }
+
+        my $HERMES =
+          Daedalus::Hermes->new( lc $event_config->{hermes_config}->{type} );
+
+        my $hermes = $HERMES->new( $event_config->{hermes_config}->{config} );
+
+        my $message;
+        my $message_data;
+
+        while (1) {
+
+            my %data_to_send;
+
+            for my $data ( keys %iris ) {
+                $data_to_send{$data} = $iris{$data};
+            }
+
+            $message = $hermes->validateAndReceive(
+                { queue => "daedalus_core_notifications" } )->{body};
+
+            my $message_data = decode_json($message);
+
+            my $IRIS =
+              Daedalus::Iris->new( $event_config->{notification_type} );
+
+            for my $data ( keys %$message_data ) {
+                $data_to_send{$data} = $message_data->{$data};
+            }
+
+            my $random_string = new String::Random;
+            my $random        = $random_string->randpattern( 's' x 32 );
+
+            $data_to_send{id} = $random;
+
+            my $iris_instance = $IRIS->new(%data_to_send);
+
+            die Dumper( $iris_instance->send() );
+
+        }
+    }
 ## Main
 
     my $argssize;
@@ -190,13 +268,33 @@ by conf file. These files must be placed in conf.d folder.
 
     # iris-hydra.xml is valid
 
-    $event_configs = read_conf_files($conf_folder);
+    $event_configs = read_hydra_conf_files($conf_folder);
+
+    # Check Iris Config
+    for my $event_name ( keys %$event_configs ) {
+        my $iris_notification_type =
+          $event_configs->{$event_name}->{notification_type};
+        my $iris_conf_filename =
+          "$conf_folder/iris-$iris_notification_type.xml";
+        my $iris_conf_schema =
+          "$schemas_folder/iris-$iris_notification_type.xsd";
+        my $check_status =
+          valitate_conf_file( $iris_conf_schema, $iris_conf_filename );
+        croak "Iris config for $event_name is invalid"
+          unless ( $check_status->{code} );
+    }
 
     #Create subprocess for each event
+    my $pid;
+    for my $event_name ( keys %$event_configs ) {
+        $pid = fork();
+        croak "Fatal error creating subprocess" if not defined $pid;
+        if ( not $pid ) {
+            start_hermes( $event_configs->{$event_name}, $conf_folder );
+        }
+    }
 
-    #for my $event in
-    #die Dumper($event_configs);
-
+    while ( wait() != -1 ) { }
 }
 
 =head1 AUTHOR
