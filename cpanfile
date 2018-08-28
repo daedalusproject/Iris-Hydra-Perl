@@ -1,4 +1,4 @@
-requires 'Devel::Cover::Report::Codecov', 0.22;
+requires 'Devel::Cover::Report::Codecov', 0.23;
 
 recommends 'Pod::Usage';
 
