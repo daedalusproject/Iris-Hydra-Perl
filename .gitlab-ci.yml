@@ -2,6 +2,7 @@ image: acastellano/cirunnerbionic
 
 stages:
     - test
+    - build
 
 unit_tests:
     stage: test
