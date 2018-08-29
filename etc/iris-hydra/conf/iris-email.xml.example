@@ -1,0 +1,7 @@
+<iris>
+    <smtpserver>email.server</smtpserver>
+    <smtpport>25</smtpport>
+    <smtpuser>tour_user</smtpuser>
+    <smtpassword>your_password</smtpassword>
+    <emailfrom>your@email.net</emailfrom>
+</iris>

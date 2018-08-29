@@ -1,0 +1,9 @@
+<hydra>
+    <event>
+        <name>YourEvent</name>
+        <notification>notification_type</notification>
+        <hermes>
+            <name>hermes_config</name>
+        </hermes>
+    </event>
+</hydra>
