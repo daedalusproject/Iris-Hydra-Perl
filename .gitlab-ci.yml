@@ -54,7 +54,7 @@ run-build:
         - wget -O - http://repo.daedalus-project.io/repo.daedalus-project.io.gpg-key.pub | apt-key add -
         - apt-get update
         - apt-get install -y libdaedalus-iris-perl libdaedalus-hermes-perl libjson-xs-perl libreadonly-perl
-        - apt-get install -y dh-make-perl dpkg-dev
+        - apt-get install -y dh-make-perl dh-systemd dpkg-dev
         - dpkg-buildpackage -uc -b
         - mkdir build
         - mv ../*.deb build/
