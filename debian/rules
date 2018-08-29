@@ -2,4 +2,4 @@
 %:
 	@mkdir -p usr/sbin
 	@cp lib/Daedalus/Iris/Hydra.pm usr/sbin/iris-hydra
-	dh $@
+	dh $@ --with systemd
