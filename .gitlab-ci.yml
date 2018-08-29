@@ -39,3 +39,21 @@ cover:
         - cover -test
         - cover -report codecov
     coverage: /Total\s+.+\s(\d+\.\d+?)$/
+
+run-build:
+    stage: build
+    artifacts:
+        paths:
+            - build/*
+    script:
+        - apt-get update -qq && apt-get install -y gcc make cpanminus libexpat1 expat libexpat1-dev libxml2-dev zlib1g-dev libssl-dev wget
+        - echo "deb https://dl.bintray.com/rabbitmq/debian bionic main" > /etc/apt/sources.list.d/bintray.rabbitmq.list
+        - echo "deb [ arch=amd64  ] http://repo.daedalus-project.io/ any daedalus" > /etc/apt/sources.list.d/daedalus-project.list
+        - wget -O- https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc | apt-key add -
+        - wget -O - http://repo.daedalus-project.io/repo.daedalus-project.io.gpg-key.pub | apt-key add -
+        - apt-get update
+        - apt-get install -y libdaedalus-iris-perl libdaedalus-hermes-perl libjson-xs-perl libreadonly-perl
+        - apt-get install -y dh-make-perl dpkg-dev
+        - dpkg-buildpackage -uc -b
+        - mkdir build
+        - mv ../*.deb build/
