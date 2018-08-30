@@ -219,6 +219,9 @@ by conf file. These files must be placed in conf.d folder.
             $data_to_send{id} = $random;
 
             my $iris_instance = $IRIS->new(%data_to_send);
+
+            $iris_instance->send();
+
         }
     }
 ## Main
