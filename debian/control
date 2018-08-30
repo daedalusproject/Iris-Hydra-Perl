@@ -9,5 +9,4 @@ Homepage: https://git.daedalus-project.io/daedalusproject/Iris-Hydra-Perl
 Package: iris-hydra
 Architecture: any
 Depends: libdaedalus-hermes-perl, libdaedalus-iris-perl, libreadonly-perl, libjson-xs-perl, ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Description: Multithread daemon which process Daedalus Project Notifications
