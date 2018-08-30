@@ -1,0 +1,12 @@
+Source: iris-hydra
+Section: main
+Priority: optional
+Maintainer: Álvaro Castellano Vela <alvaro.castellano.vela@gmail.com>
+Build-Depends: libdaedalus-hermes-perl, libdaedalus-iris-perl, libreadonly-perl, libjson-xs-perl, dh-systemd, debhelper (>= 10)
+Standards-Version: 4.1.2
+Homepage: https://git.daedalus-project.io/daedalusproject/Iris-Hydra-Perl
+
+Package: iris-hydra
+Architecture: any
+Depends: libdaedalus-hermes-perl, libdaedalus-iris-perl, libreadonly-perl, libjson-xs-perl, ${shlibs:Depends}, ${misc:Depends}
+Description: Multithread daemon which process Daedalus Project Notifications

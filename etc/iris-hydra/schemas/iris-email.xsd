@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified">
+
+    <xs:element name="iris">
+        <xs:complexType>
+            <xs:all>
+                <xs:element name = "smtpserver" type = "xs:string"/>
+                <xs:element name = "smtpport" type = "xs:int"/>
+                <xs:element name = "smtpuser" type = "xs:string"/>
+                <xs:element name = "smtpassword" type = "xs:string"/>
+                <xs:element name = "emailfrom" type = "xs:string"/>
+            </xs:all>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
