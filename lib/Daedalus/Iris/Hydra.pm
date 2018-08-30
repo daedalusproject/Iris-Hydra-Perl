@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 package Daedalus::Iris::Hydra;
 
 use 5.006;
