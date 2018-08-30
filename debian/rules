@@ -1,0 +1,5 @@
+#!/usr/bin/make -f
+%:
+	@mkdir -p usr/sbin
+	@cp lib/Daedalus/Iris/Hydra.pm usr/sbin/iris-hydra
+	dh $@ --with systemd

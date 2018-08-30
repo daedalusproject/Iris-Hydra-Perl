@@ -1,0 +1,13 @@
+<hermes>
+    <type>RabbitMQ</type>
+    <user>guest</user>
+    <port>5672</port>
+    <host>localhost</host>
+    <password>guest</password>
+    <queue name="hermes_config_example" purpose="hermes_config_example" channel="1">
+        <queue_options durable="1" auto_delete="0" />
+        <amqp_props delivery_mode="2" />
+        <consume_options no_ack="0" />
+        <basic_qos_options prefetch_count="1" />
+    </queue>
+</hermes>

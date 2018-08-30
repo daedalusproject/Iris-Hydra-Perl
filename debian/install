@@ -1,0 +1,6 @@
+etc/iris-hydra/conf/iris-email.xml.example
+etc/iris-hydra/conf/iris-hydra.xml.example
+etc/iris-hydra/conf/conf.d/hermes_config.xml.example
+etc/iris-hydra/schemas/hydra.xsd
+etc/iris-hydra/schemas/iris-email.xsd
+usr/sbin/iris-hydra
