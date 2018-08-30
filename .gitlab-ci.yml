@@ -43,6 +43,8 @@ cover:
 
 run-build:
     stage: build
+    only:
+        - /^v-.*$/
     artifacts:
         paths:
             - build/*
